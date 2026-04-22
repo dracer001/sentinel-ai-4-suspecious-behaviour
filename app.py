@@ -12,7 +12,7 @@ from werkzeug.utils import secure_filename
 from groq import Groq
 
 # ─── CONFIG ───────────────────────────────────────────────────────────────────
-GROQ_KEY = os.environ.get("GROQ_API_KEY", "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")
+GROQ_KEY = os.environ.get("GROQ_API_KEY")
 UPLOAD_FOLDER = Path("uploads")
 LOG_FILE = Path("logs/history.json")
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "bmp"}
