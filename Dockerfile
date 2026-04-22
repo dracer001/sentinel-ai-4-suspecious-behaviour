@@ -1,9 +1,9 @@
 # Use a lightweight Python image
 FROM python:3.10-slim
 
-# 1. Install the missing system libraries MediaPipe needs
+# 1. Install modern system libraries MediaPipe needs
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+    libgl1 \
     libgles2 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
