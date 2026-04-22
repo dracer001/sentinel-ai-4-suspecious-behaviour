@@ -5,7 +5,7 @@ __pycache__/
 .env
 uploads/
 logs/
-*.task
+# *.task
 *.jpg
 *.jpeg
 *.png

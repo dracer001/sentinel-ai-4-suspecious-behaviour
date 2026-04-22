@@ -10,9 +10,13 @@ from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from groq import Groq
+import os
+from dotenv import load_dotenv
+
+load_dotenv() # This loads the variables from your .env file
 
 # ─── CONFIG ───────────────────────────────────────────────────────────────────
-GROQ_KEY = os.environ.get("GROQ_API_KEY")
+GROQ_KEY = os.getenv("GROQ_API_KEY")
 UPLOAD_FOLDER = Path("uploads")
 LOG_FILE = Path("logs/history.json")
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "bmp"}
