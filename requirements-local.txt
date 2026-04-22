@@ -1,0 +1,10 @@
+flask>=3.0.0
+flask-cors>=4.0.0
+groq>=0.9.0
+werkzeug>=3.0.0
+gunicorn>=21.2.0
+
+# Local AI engines (for local/hybrid mode)
+mediapipe>=0.10.14
+numpy>=1.26.0
+opencv-python-headless>=4.9.0

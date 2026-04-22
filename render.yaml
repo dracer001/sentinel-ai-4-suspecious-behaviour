@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: sentinel-security
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app --workers 1 --timeout 120 --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false   # Set this in Render dashboard
+      - key: FLASK_DEBUG
+        value: false
+      - key: MEDIAPIPE_MODEL_PATH
+        value: pose_landmarker_heavy.task
+    disk:
+      name: sentinel-data
+      mountPath: /opt/render/project/src
+      sizeGB: 1

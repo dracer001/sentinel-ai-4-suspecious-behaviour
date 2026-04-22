@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SENTINEL — Scan History</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c0f; --panel: #0d1318; --border: #1a2530;
+  --accent: #00e5ff; --accent2: #ff3d3d; --accent3: #39ff14;
+  --text: #c8d8e8; --muted: #4a6070; --warn: #ff9500; --yellow: #ffe500;
+  --font-mono: 'Share Tech Mono', monospace;
+  --font-display: 'Barlow Condensed', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-mono); min-height: 100vh; }
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,229,255,0.015) 2px, rgba(0,229,255,0.015) 4px);
+  pointer-events: none; z-index: 9999;
+}
+.header {
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(13,19,24,0.95);
+  backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 100;
+}
+.logo { font-family: var(--font-display); font-size: 2rem; font-weight: 900; letter-spacing: 0.15em; color: var(--accent); text-shadow: 0 0 20px rgba(0,229,255,0.5); text-transform: uppercase; }
+.logo span { color: var(--accent2); }
+.nav-link { color: var(--muted); text-decoration: none; font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.1em; padding: 4px 10px; border: 1px solid var(--border); transition: all 0.2s; }
+.nav-link:hover { color: var(--accent); border-color: var(--accent); }
+.main { max-width: 1300px; margin: 0 auto; padding: 2rem; }
+
+/* FILTERS */
+.filter-bar {
+  background: var(--panel); border: 1px solid var(--border);
+  padding: 1.2rem 1.5rem; margin-bottom: 1.5rem;
+  display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;
+}
+.filter-group { display: flex; flex-direction: column; gap: 4px; }
+.filter-label { font-size: 0.6rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+.filter-input {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text); font-family: var(--font-mono); font-size: 0.72rem;
+  padding: 6px 10px; min-width: 180px;
+}
+.filter-input:focus { outline: none; border-color: var(--accent); }
+.filter-btn {
+  background: transparent; border: 1px solid var(--accent); color: var(--accent);
+  font-family: var(--font-display); font-size: 0.8rem; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 8px 20px; cursor: pointer; transition: all 0.2s;
+}
+.filter-btn:hover { background: rgba(0,229,255,0.08); }
+.filter-btn.secondary { border-color: var(--border); color: var(--muted); }
+.filter-btn.secondary:hover { color: var(--text); border-color: var(--text); }
+.quick-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+.quick-btn {
+  background: transparent; border: 1px solid var(--border); color: var(--muted);
+  font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.06em;
+  padding: 4px 8px; cursor: pointer; transition: all 0.2s; text-transform: uppercase;
+}
+.quick-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* STATS BAR */
+.stats-bar {
+  display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;
+}
+.stat-card {
+  background: var(--panel); border: 1px solid var(--border);
+  padding: 1rem 1.5rem; flex: 1; min-width: 120px;
+  position: relative;
+}
+.stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 2px; height: 100%; background: var(--accent); }
+.stat-num { font-family: var(--font-display); font-size: 2rem; font-weight: 900; color: var(--accent); }
+.stat-label { font-size: 0.6rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; }
+
+/* TABLE */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.7rem; }
+thead tr { border-bottom: 1px solid var(--accent); }
+th {
+  font-family: var(--font-display); font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent);
+  padding: 8px 12px; text-align: left; white-space: nowrap;
+}
+tbody tr {
+  border-bottom: 1px solid rgba(26,37,48,0.8);
+  transition: background 0.15s; cursor: pointer;
+}
+tbody tr:hover { background: rgba(0,229,255,0.04); }
+td { padding: 10px 12px; color: var(--text); vertical-align: middle; }
+td.mono { font-family: var(--font-mono); }
+.badge {
+  display: inline-block; padding: 2px 8px;
+  font-size: 0.58rem; letter-spacing: 0.1em; border: 1px solid; text-transform: uppercase;
+}
+.badge-green { border-color: var(--accent3); color: var(--accent3); }
+.badge-yellow { border-color: var(--yellow); color: var(--yellow); }
+.badge-orange { border-color: var(--warn); color: var(--warn); }
+.badge-red { border-color: var(--accent2); color: var(--accent2); }
+.badge-darkred { border-color: #ff003c; color: #ff003c; }
+.badge-blue { border-color: var(--accent); color: var(--accent); }
+.threat-num-cell { font-family: var(--font-display); font-size: 1.5rem; font-weight: 900; }
+
+/* DETAIL MODAL */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(8,12,15,0.92); z-index: 2000;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: var(--panel); border: 1px solid var(--border);
+  width: min(700px, 95vw); max-height: 90vh; overflow-y: auto;
+  padding: 2rem; position: relative;
+}
+.modal-close {
+  position: absolute; top: 1rem; right: 1rem;
+  background: transparent; border: none; color: var(--muted);
+  font-family: var(--font-mono); font-size: 0.8rem; cursor: pointer;
+}
+.modal-close:hover { color: var(--accent2); }
+.modal-title { font-family: var(--font-display); font-size: 1.4rem; font-weight: 900; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 1.5rem; }
+.data-row { display: flex; gap: 8px; padding: 8px 0; border-bottom: 1px solid rgba(26,37,48,0.8); font-size: 0.72rem; }
+.data-key { color: var(--muted); letter-spacing: 0.08em; min-width: 150px; flex-shrink: 0; }
+.data-val { color: var(--text); word-break: break-all; }
+.raw-json { background: #050810; border: 1px solid var(--border); padding: 1rem; font-size: 0.65rem; overflow: auto; max-height: 300px; margin-top: 1rem; white-space: pre; color: #7fa8c0; }
+
+/* EMPTY */
+.empty-state { text-align: center; padding: 4rem; color: var(--muted); }
+.empty-state div:first-child { font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; }
+.loading-state { text-align: center; padding: 3rem; color: var(--muted); animation: blink 1s step-end infinite; }
+@keyframes blink { 50% { opacity: 0.3; } }
+
+.pagination { display: flex; gap: 4px; justify-content: center; margin-top: 1.5rem; flex-wrap: wrap; }
+.page-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: var(--font-mono); font-size: 0.65rem; padding: 4px 10px; cursor: pointer; transition: all 0.2s; }
+.page-btn:hover, .page-btn.active { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">SENTI<span>NEL</span></div>
+  <div style="display:flex;gap:1rem;align-items:center;">
+    <span style="font-size:0.65rem;color:var(--muted);letter-spacing:0.08em;" id="total-count"></span>
+    <a href="/" class="nav-link">[ NEW SCAN ]</a>
+  </div>
+</header>
+
+<main class="main">
+  <div style="font-family:var(--font-display);font-size:0.7rem;font-weight:700;letter-spacing:0.2em;color:var(--accent);text-transform:uppercase;margin-bottom:1.5rem;">
+    ▶ SCAN HISTORY LOG
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-bar" id="stats-bar">
+    <div class="stat-card"><div class="stat-num" id="stat-total">—</div><div class="stat-label">Total Scans</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-alerts" style="color:var(--accent2);">—</div><div class="stat-label">Alerts (≥6)</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-avg" style="color:var(--warn);">—</div><div class="stat-label">Avg Threat</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-today" style="color:var(--accent3);">—</div><div class="stat-label">Today</div></div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filter-bar">
+    <div class="filter-group">
+      <div class="filter-label">Start Date/Time</div>
+      <input type="datetime-local" class="filter-input" id="filter-start">
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">End Date/Time</div>
+      <input type="datetime-local" class="filter-input" id="filter-end">
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">Limit</div>
+      <input type="number" class="filter-input" id="filter-limit" value="50" min="1" max="500" style="min-width:80px;">
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">Quick Filters</div>
+      <div class="quick-btns">
+        <button class="quick-btn" onclick="quickFilter('last1')">Last 1</button>
+        <button class="quick-btn" onclick="quickFilter('last10')">Last 10</button>
+        <button class="quick-btn" onclick="quickFilter('last50')">Last 50</button>
+        <button class="quick-btn" onclick="quickFilter('today')">Today</button>
+        <button class="quick-btn" onclick="quickFilter('week')">This Week</button>
+        <button class="quick-btn" onclick="quickFilter('alerts')">Alerts Only</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:flex-end;">
+      <button class="filter-btn" onclick="loadHistory()">SEARCH</button>
+      <button class="filter-btn secondary" onclick="resetFilters()">RESET</button>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrap">
+    <div id="loading-state" class="loading-state">LOADING RECORDS...</div>
+    <div id="empty-state" class="empty-state" style="display:none;">
+      <div>🗂️</div>
+      <div style="font-size:0.75rem;letter-spacing:0.1em;">NO RECORDS FOUND</div>
+    </div>
+    <table id="history-table" style="display:none;">
+      <thead>
+        <tr>
+          <th>TIME</th>
+          <th>ID</th>
+          <th>THREAT</th>
+          <th>STATUS</th>
+          <th>BEHAVIOR</th>
+          <th>FUSION</th>
+          <th>LOCAL</th>
+          <th>API</th>
+          <th>MODE</th>
+          <th>PROC</th>
+          <th>FILE</th>
+        </tr>
+      </thead>
+      <tbody id="history-body"></tbody>
+    </table>
+  </div>
+
+  <div class="pagination" id="pagination"></div>
+</main>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('modal-overlay').classList.remove('active')">[ CLOSE ✕ ]</button>
+    <div class="modal-title">RECORD DETAIL</div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let allRecords = [];
+let alertFilter = false;
+
+function statusBadge(status) {
+  const map = {CLEAR:'green',LOW:'yellow',MODERATE:'orange',HIGH:'red',CRITICAL:'darkred'};
+  const cls = map[status] || 'blue';
+  return `<span class="badge badge-${cls}">${status}</span>`;
+}
+function threatColor(tl) {
+  if (tl >= 9) return '#ff003c';
+  if (tl >= 7) return '#ff3d3d';
+  if (tl >= 5) return '#ff9500';
+  if (tl >= 3) return '#ffe500';
+  return '#39ff14';
+}
+
+async function loadHistory() {
+  $('loading-state').style.display = 'block';
+  $('history-table').style.display = 'none';
+  $('empty-state').style.display = 'none';
+
+  const start = $('filter-start').value;
+  const end = $('filter-end').value;
+  const limit = $('filter-limit').value;
+
+  let url = `/api/history?limit=${limit}`;
+  if (start) url += `&start=${new Date(start).getTime() / 1000}`;
+  if (end) url += `&end=${new Date(end).getTime() / 1000}`;
+
+  try {
+    const resp = await fetch(url);
+    const data = await resp.json();
+    allRecords = data.records || [];
+    renderRecords(allRecords);
+    updateStats(allRecords);
+    $('total-count').textContent = `${allRecords.length} RECORDS`;
+  } catch (e) {
+    $('loading-state').textContent = 'ERROR LOADING RECORDS';
+  }
+}
+
+function renderRecords(records) {
+  $('loading-state').style.display = 'none';
+  if (!records.length) {
+    $('empty-state').style.display = 'block';
+    return;
+  }
+  $('history-table').style.display = 'table';
+  $('history-body').innerHTML = records.map((r, i) => {
+    const dt = new Date(r.timestamp).toLocaleString();
+    const col = threatColor(r.threat_level);
+    return `<tr onclick="showDetail(${i})">
+      <td class="mono" style="font-size:0.65rem;white-space:nowrap;">${dt}</td>
+      <td class="mono" style="color:var(--muted);font-size:0.65rem;">${r.id}</td>
+      <td class="threat-num-cell" style="color:${col};">${r.threat_level}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.behavior}</td>
+      <td style="font-size:0.62rem;color:var(--muted);">${r.fusion_mode || '—'}</td>
+      <td style="font-size:0.65rem;">${r.local_threat_level ?? '—'}</td>
+      <td style="font-size:0.65rem;">${r.api_threat_level ?? '—'}</td>
+      <td><span class="badge badge-blue">${r.mode}</span></td>
+      <td style="font-size:0.65rem;color:var(--muted);">${r.processing_time_s}s</td>
+      <td style="font-size:0.62rem;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;">${r.original_filename || '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function updateStats(records) {
+  $('stat-total').textContent = records.length;
+  $('stat-alerts').textContent = records.filter(r => r.threat_level >= 6).length;
+  const avg = records.length ? (records.reduce((s, r) => s + (r.threat_level || 0), 0) / records.length).toFixed(1) : '—';
+  $('stat-avg').textContent = avg;
+  const today = new Date().toDateString();
+  $('stat-today').textContent = records.filter(r => new Date(r.timestamp).toDateString() === today).length;
+}
+
+function showDetail(idx) {
+  const r = allRecords[idx];
+  const rows = [
+    ['ID', r.id], ['TIMESTAMP', r.timestamp],
+    ['THREAT LEVEL', `<span style="color:${threatColor(r.threat_level)};font-family:var(--font-display);font-size:1.4rem;font-weight:900;">${r.threat_level}/10</span>`],
+    ['STATUS', statusBadge(r.status)],
+    ['BEHAVIOR', r.behavior],
+    ['REASON', r.reason],
+    ['FUSION MODE', r.fusion_mode],
+    ['LOCAL THREAT', r.local_threat_level ?? 'N/A'],
+    ['API THREAT', r.api_threat_level ?? 'N/A'],
+    ['LOCAL SOURCE', r.local_source || 'N/A'],
+    ['API SOURCE', r.api_source || 'N/A'],
+    ['ANALYSIS MODE', r.mode],
+    ['PROCESSING TIME', r.processing_time_s + 's'],
+    ['FILE', r.original_filename],
+    ['SAVED AS', r.filename],
+  ];
+  $('modal-body').innerHTML = rows.map(([k, v]) => `
+    <div class="data-row"><span class="data-key">${k}</span><span class="data-val">${v ?? '—'}</span></div>
+  `).join('') + `<div class="raw-json">${JSON.stringify(r, null, 2)}</div>`;
+  $('modal-overlay').classList.add('active');
+}
+
+function closeModal(e) {
+  if (e.target === $('modal-overlay')) $('modal-overlay').classList.remove('active');
+}
+
+function quickFilter(type) {
+  const now = new Date();
+  $('filter-start').value = '';
+  $('filter-end').value = '';
+
+  if (type === 'last1') { $('filter-limit').value = 1; loadHistory(); return; }
+  if (type === 'last10') { $('filter-limit').value = 10; loadHistory(); return; }
+  if (type === 'last50') { $('filter-limit').value = 50; loadHistory(); return; }
+
+  if (type === 'today') {
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    $('filter-start').value = toLocalISO(start);
+    $('filter-limit').value = 500;
+  }
+  if (type === 'week') {
+    const start = new Date(now.getTime() - 7 * 86400000);
+    $('filter-start').value = toLocalISO(start);
+    $('filter-limit').value = 500;
+  }
+  if (type === 'alerts') {
+    $('filter-limit').value = 500;
+    loadHistory().then(() => {
+      const filtered = allRecords.filter(r => r.threat_level >= 6);
+      renderRecords(filtered);
+      $('total-count').textContent = `${filtered.length} ALERT RECORDS`;
+    });
+    return;
+  }
+  loadHistory();
+}
+
+function toLocalISO(date) {
+  const pad = n => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function resetFilters() {
+  $('filter-start').value = '';
+  $('filter-end').value = '';
+  $('filter-limit').value = 50;
+  loadHistory();
+}
+
+// Initial load
+loadHistory();
+</script>
+</body>
+</html>
