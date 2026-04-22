@@ -468,6 +468,6 @@ def uploaded_file(filename):
 # ─── MAIN ─────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
+    debug = os.environ.get("FLASK_DEBUG", "True").lower() == "True"
     log.info(f"🚀 Sentinel starting on port {port} | MediaPipe: {mediapipe_available}")
     app.run(host="0.0.0.0", port=port, debug=debug)
