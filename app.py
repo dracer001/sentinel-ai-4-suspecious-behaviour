@@ -4,26 +4,42 @@ import base64
 import uuid
 import time
 import logging
+import urllib.request  # <--- Added for the auto-download logic
 from datetime import datetime, timezone
 from pathlib import Path
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from groq import Groq
-import os
 from dotenv import load_dotenv
 
-load_dotenv() # This loads the variables from your .env file
+load_dotenv() 
 
 # ─── CONFIG ───────────────────────────────────────────────────────────────────
-GROQ_KEY = os.getenv("GROQ_API_KEY")
+# Ensure this matches what you set in Render Dashboard
+GROQ_KEY = os.getenv("GROQ_API_KEY") 
 UPLOAD_FOLDER = Path("uploads")
 LOG_FILE = Path("logs/history.json")
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "bmp"}
-MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10MB
+MAX_CONTENT_LENGTH = 10 * 1024 * 1024
 
 # MediaPipe model path
 MEDIAPIPE_MODEL = os.environ.get("MEDIAPIPE_MODEL_PATH", "pose_landmarker_heavy.task")
+
+# ─── MODEL DOWNLOADER ────────────────────────────────────────────────────────
+def ensure_model_exists(model_path):
+    if not Path(model_path).exists():
+        log.info(f"📡 Downloading MediaPipe model to {model_path}...")
+        url = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task"
+        try:
+            urllib.request.urlretrieve(url, model_path)
+            log.info("✅ Download complete.")
+        except Exception as e:
+            log.error(f"❌ Failed to download model: {e}")
+
+# Call the downloader before initializing MediaPipe
+ensure_model_exists(MEDIAPIPE_MODEL)
+
 
 # Groq models in priority order (vision-capable first)
 GROQ_MODELS = [

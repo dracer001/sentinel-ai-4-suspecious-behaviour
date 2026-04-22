@@ -3,16 +3,13 @@ services:
     name: sentinel-security
     env: python
     plan: free
-    buildCommand: "pip install -r requirements.txt"
+    # We combine apt-get (to fix the library error) with pip install
+    buildCommand: "apt-get update && apt-get install -y libgl1-mesa-glx libgles2 && pip install -r requirements.txt"
     startCommand: "gunicorn app:app --workers 1 --timeout 120 --bind 0.0.0.0:$PORT"
     envVars:
       - key: GROQ_API_KEY
-        sync: false   # Set this in Render dashboard
+        sync: false   # Set the actual value in the Render Dashboard UI
       - key: FLASK_DEBUG
         value: false
       - key: MEDIAPIPE_MODEL_PATH
         value: pose_landmarker_heavy.task
-    disk:
-      name: sentinel-data
-      mountPath: /opt/render/project/src
-      sizeGB: 1
