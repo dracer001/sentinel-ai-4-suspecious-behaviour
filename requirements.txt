@@ -5,6 +5,7 @@ werkzeug>=3.0.0
 gunicorn>=21.2.0
 
 # Local AI (optional — comment out if deploying to Render free tier)
-# mediapipe>=0.10.14
-# numpy>=1.26.0
-# opencv-python-headless>=4.9.0
+mediapipe>=0.10.14
+numpy>=1.26.0
+opencv-python-headless>=4.9.0
+dotenv
