@@ -1,10 +1,9 @@
 services:
   - type: web
     name: sentinel-security
-    env: python
+    env: docker  # <--- Changed from 'python' to 'docker'
     plan: free
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app --workers 1 --timeout 120 --bind 0.0.0.0:$PORT"
+    startCommand: null # Dockerfile handles the start command
     envVars:
       - key: GROQ_API_KEY
         sync: false
