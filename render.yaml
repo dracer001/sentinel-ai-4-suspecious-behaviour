@@ -3,12 +3,11 @@ services:
     name: sentinel-security
     env: python
     plan: free
-    # We combine apt-get (to fix the library error) with pip install
-    buildCommand: "apt-get update && apt-get install -y libgl1-mesa-glx libgles2 && pip install -r requirements.txt"
+    buildCommand: "pip install -r requirements.txt"
     startCommand: "gunicorn app:app --workers 1 --timeout 120 --bind 0.0.0.0:$PORT"
     envVars:
       - key: GROQ_API_KEY
-        sync: false   # Set the actual value in the Render Dashboard UI
+        sync: false
       - key: FLASK_DEBUG
         value: false
       - key: MEDIAPIPE_MODEL_PATH
