@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SENTINEL — Security Analyzer</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080c0f;--panel:#0d1318;--border:#1a2530;--accent:#00e5ff;--red:#ff3d3d;--green:#39ff14;--yellow:#ffe500;--orange:#ff9500;--muted:#4a6070;--text:#c8d8e8;--mono:'Share Tech Mono',monospace;--display:'Barlow Condensed',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,229,255,.015) 2px,rgba(0,229,255,.015) 4px);pointer-events:none;z-index:9999}
+
+/* HEADER */
+.hdr{border-bottom:1px solid var(--border);padding:.8rem 1.5rem;display:flex;align-items:center;justify-content:space-between;background:rgba(13,19,24,.95);position:sticky;top:0;z-index:100}
+.logo{font-family:var(--display);font-size:1.8rem;font-weight:900;letter-spacing:.15em;color:var(--accent);text-shadow:0 0 20px rgba(0,229,255,.4)}
+.logo span{color:var(--red)}
+.hdr-right{display:flex;align-items:center;gap:1rem;font-size:.65rem;color:var(--muted)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 6px var(--green)}50%{opacity:.3;box-shadow:none}}
+.badge{display:inline-block;padding:2px 8px;font-size:.58rem;letter-spacing:.1em;border:1px solid;text-transform:uppercase}
+.badge-g{border-color:var(--green);color:var(--green)}
+.badge-y{border-color:var(--yellow);color:var(--yellow)}
+.badge-r{border-color:var(--red);color:var(--red)}
+.nav-a{color:var(--muted);text-decoration:none;font-size:.65rem;letter-spacing:.1em;padding:3px 8px;border:1px solid var(--border);transition:all .2s}
+.nav-a:hover{color:var(--accent);border-color:var(--accent)}
+
+/* LAYOUT */
+.main{max-width:1200px;margin:0 auto;padding:1.5rem;display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+@media(max-width:768px){.main{grid-template-columns:1fr}}
+
+/* PANEL */
+.panel{background:var(--panel);border:1px solid var(--border);padding:1.2rem;position:relative}
+.panel::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent)}
+.ptitle{font-family:var(--display);font-size:.7rem;font-weight:700;letter-spacing:.2em;color:var(--accent);text-transform:uppercase;margin-bottom:1rem;display:flex;align-items:center;gap:6px}
+.ptitle::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* DROP ZONE */
+.drop{border:2px dashed var(--border);padding:2.5rem 1rem;text-align:center;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.drop:hover,.drop.over{border-color:var(--accent);background:rgba(0,229,255,.04)}
+.drop .icon{font-size:2rem;margin-bottom:.6rem;opacity:.5}
+.drop .hint{font-size:.68rem;color:var(--muted);line-height:1.6}
+.drop .hint strong{color:var(--accent)}
+#fi{display:none}
+#prev{display:none;margin-top:.8rem}
+#prev img{width:100%;max-height:260px;object-fit:contain;border:1px solid var(--border);background:#000}
+#finfo{font-size:.6rem;color:var(--muted);margin-top:3px}
+
+/* MODE BUTTONS */
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:.8rem}
+.mbtn{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;padding:6px 2px;cursor:pointer;transition:all .2s;text-transform:uppercase}
+.mbtn.active,.mbtn:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.06)}
+.mdesc{font-size:.58rem;color:var(--muted);margin-top:5px;line-height:1.4}
+
+/* ANALYZE BUTTON */
+.abtn{width:100%;margin-top:.8rem;padding:12px;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:var(--display);font-size:.95rem;font-weight:700;letter-spacing:.25em;text-transform:uppercase;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.abtn::before{content:'';position:absolute;left:-100%;top:0;bottom:0;width:100%;background:rgba(0,229,255,.1);transition:left .3s}
+.abtn:hover::before{left:0}
+.abtn:disabled{opacity:.3;cursor:not-allowed}
+.abtn.loading{border-color:var(--yellow);color:var(--yellow)}
+
+/* ENGINE STATUS */
+.engines{display:flex;gap:6px;flex-wrap:wrap;margin-top:.8rem}
+.eng{font-size:.58rem;padding:2px 7px;border:1px solid var(--border);color:var(--muted)}
+.eng.on{border-color:var(--green);color:var(--green)}
+.eng.off{opacity:.4}
+
+/* RESULT PANEL */
+.threat-box{text-align:center;padding:1.5rem;margin-bottom:1rem;border:1px solid var(--border);position:relative}
+.tnum{font-family:var(--display);font-size:5rem;font-weight:900;line-height:1;color:var(--accent);transition:color .4s}
+.tstat{font-family:var(--display);font-size:1.5rem;font-weight:700;letter-spacing:.2em;margin-top:3px;transition:color .4s}
+.tbars{display:flex;gap:3px;margin-top:.8rem;justify-content:center}
+.tbar{width:18px;height:7px;background:var(--border);transition:all .4s}
+.scene-tag{display:inline-block;margin-top:.5rem;padding:3px 10px;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;border:1px solid var(--accent);color:var(--accent)}
+.drow{display:flex;gap:6px;padding:7px 0;border-bottom:1px solid rgba(26,37,48,.8);font-size:.68rem}
+.dk{color:var(--muted);letter-spacing:.07em;min-width:120px;flex-shrink:0}
+.dv{color:var(--text);word-break:break-word}
+.dv.hi{color:var(--accent);font-weight:bold}
+.dv.danger{color:var(--red);font-weight:bold}
+.dv.ok{color:var(--green)}
+.raw{background:#050810;border:1px solid var(--border);padding:.8rem;font-size:.62rem;overflow:auto;max-height:180px;white-space:pre;color:#6a8a9a;margin-top:.8rem;display:none}
+.tbtn{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:.58rem;letter-spacing:.07em;padding:3px 8px;cursor:pointer;margin-top:.6rem}
+.empty{text-align:center;padding:3rem;color:var(--muted)}
+.empty .ei{font-size:2rem;opacity:.3;margin-bottom:.5rem}
+
+/* OVERLAY */
+.overlay{display:none;position:fixed;inset:0;background:rgba(8,12,15,.92);z-index:1000;align-items:center;justify-content:center;flex-direction:column;gap:.8rem}
+.overlay.on{display:flex}
+.scan-box{width:100px;height:100px;border:2px solid var(--border);position:relative;overflow:hidden}
+.scan-box::before{content:'';position:absolute;top:-2px;left:0;right:0;height:3px;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:scanline 1.4s linear infinite}
+@keyframes scanline{0%{top:-2px}100%{top:100%}}
+.scan-txt{font-family:var(--display);font-size:1.1rem;font-weight:700;letter-spacing:.25em;color:var(--accent);animation:blink 1s step-end infinite}
+@keyframes blink{50%{opacity:.2}}
+
+/* API REF */
+.api-ref{background:var(--panel);border:1px solid var(--border);padding:1.2rem;margin-top:1.2rem}
+.code{background:#050810;border:1px solid var(--border);padding:.6rem .8rem;font-size:.6rem;overflow-x:auto;margin-top:.4rem;color:#6a8a9a;line-height:1.5}
+.code .kw{color:var(--accent)}
+.code .str{color:var(--green)}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--panel);border:1px solid var(--border);padding:.6rem 1rem;font-size:.68rem;z-index:9000;opacity:0;transform:translateY(16px);transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.err{border-left:3px solid var(--red)}
+.toast.ok{border-left:3px solid var(--green)}
+</style>
+</head>
+<body>
+<div class="overlay" id="ov">
+  <div class="scan-box"></div>
+  <div class="scan-txt" id="smsg">ANALYZING...</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<header class="hdr">
+  <div class="logo">SENTI<span>NEL</span></div>
+  <div class="hdr-right">
+    <span><span class="dot"></span>ONLINE</span>
+    {% if embeddings_available %}<span class="badge badge-g">EMBEDDINGS</span>{% else %}<span class="badge badge-r">NO EMBEDDINGS</span>{% endif %}
+    {% if classifier_available %}<span class="badge badge-g">CLASSIFIER</span>{% else %}<span class="badge badge-y">NO CLASSIFIER</span>{% endif %}
+    <a href="/history-page" class="nav-a">[ HISTORY ]</a>
+  </div>
+</header>
+
+<main class="main">
+  <!-- LEFT COLUMN -->
+  <div>
+    <div class="panel">
+      <div class="ptitle">▶ Upload Image</div>
+      <div class="drop" id="drop">
+        <div class="icon">📷</div>
+        <div class="hint">DRAG & DROP IMAGE<br>or <strong>click to browse</strong><br><br>JPG · PNG · WEBP · max 10MB</div>
+        <input type="file" id="fi" accept="image/*">
+      </div>
+      <div id="prev"><img id="pimg" alt="preview"><div id="finfo"></div></div>
+
+      <div style="margin-top:.8rem">
+        <div class="ptitle" style="font-size:.6rem">▶ Analysis Mode</div>
+        <div class="modes" style="grid-template-columns:repeat(2,1fr)">
+          <button class="mbtn active" data-mode="nn">NEAREST-NEIGHBOR</button>
+          <button class="mbtn" data-mode="classifier">CLASSIFIER</button>
+        </div>
+        <div class="mdesc" id="mdesc">NEAREST-NEIGHBOR: compares the image against your labeled dataset directly. No training needed, works well with small datasets.</div>
+      </div>
+
+      <button class="abtn" id="abtn" disabled>⚡ SCAN IMAGE</button>
+
+      <div class="engines" id="eng-status">
+        <span class="eng {% if embeddings_available %}on{% endif %}">Dataset embeddings (nearest-neighbor)</span>
+        <span class="eng {% if classifier_available %}on{% endif %}">Trained classifier</span>
+      </div>
+    </div>
+
+    <div class="api-ref">
+      <div class="ptitle" style="font-size:.6rem;margin-bottom:.6rem">▶ API Quick Reference</div>
+      <div style="font-size:.62rem;color:var(--muted);margin-bottom:3px">POST /analyze</div>
+      <div class="code"><span class="kw">curl</span> -X POST http://localhost:5000/analyze \<br>  -F <span class="str">"image=@frame.jpg"</span> -F <span class="str">"mode=nn"</span></div>
+      <div style="font-size:.62rem;color:var(--muted);margin:6px 0 3px">GET /api/history</div>
+      <div class="code">?last=10 | ?scene_type=fighting | ?min_threat=6</div>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div>
+    <div class="panel" id="result-panel">
+      <div class="ptitle">▶ Analysis Result</div>
+
+      <div id="result-empty" class="empty">
+        <div class="ei">🎯</div>
+        <div style="font-size:.68rem;letter-spacing:.1em">AWAITING IMAGE</div>
+      </div>
+
+      <div id="result-content" style="display:none">
+        <div class="threat-box" id="tbox">
+          <div style="font-size:.6rem;color:var(--muted);letter-spacing:.15em;margin-bottom:.3rem">THREAT LEVEL</div>
+          <div class="tnum" id="tnum">—</div>
+          <div class="tstat" id="tstat">—</div>
+          <div id="scene-tag-wrap"></div>
+          <div class="tbars" id="tbars">
+            <div class="tbar" id="b0"></div><div class="tbar" id="b1"></div>
+            <div class="tbar" id="b2"></div><div class="tbar" id="b3"></div>
+            <div class="tbar" id="b4"></div><div class="tbar" id="b5"></div>
+            <div class="tbar" id="b6"></div><div class="tbar" id="b7"></div>
+            <div class="tbar" id="b8"></div><div class="tbar" id="b9"></div>
+          </div>
+        </div>
+
+        <div id="dtable"></div>
+
+        <button class="tbtn" onclick="toggleRaw()">[ RAW JSON ]</button>
+        <div class="raw" id="rawj"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const $=id=>document.getElementById(id)
+let file=null,mode='nn'
+
+const mdescs={
+  nn:'NEAREST-NEIGHBOR: compares the image against your labeled dataset directly. No training needed, works well with small datasets.',
+  classifier:'CLASSIFIER: trained Logistic Regression on top of your dataset embeddings. More accurate once you have 20-50+ images per class.'
+}
+
+document.querySelectorAll('.mbtn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.mbtn').forEach(x=>x.classList.remove('active'))
+    b.classList.add('active')
+    mode=b.dataset.mode
+    $('mdesc').textContent=mdescs[mode]
+  })
+})
+
+const drop=$('drop'),fi=$('fi')
+drop.addEventListener('click',()=>fi.click())
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over')})
+drop.addEventListener('dragleave',()=>drop.classList.remove('over'))
+drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');if(e.dataTransfer.files[0])setFile(e.dataTransfer.files[0])})
+fi.addEventListener('change',e=>{if(e.target.files[0])setFile(e.target.files[0])})
+
+function setFile(f){
+  file=f
+  $('pimg').src=URL.createObjectURL(f)
+  $('prev').style.display='block'
+  $('finfo').textContent=`${f.name} · ${(f.size/1024).toFixed(1)}KB`
+  $('abtn').disabled=false
+}
+
+$('abtn').addEventListener('click',scan)
+
+async function scan(){
+  if(!file)return
+  $('abtn').disabled=true
+  $('abtn').classList.add('loading')
+  $('abtn').textContent='⏳ SCANNING...'
+  showOverlay()
+
+  const fd=new FormData()
+  fd.append('image',file)
+  fd.append('mode',mode)
+
+  try{
+    const r=await fetch('/analyze',{method:'POST',body:fd})
+    const d=await r.json()
+    if(!r.ok)throw new Error(d.error||'Server error')
+    renderResult(d)
+    toast('Analysis complete','ok')
+  }catch(e){
+    toast('Error: '+e.message,'err')
+  }finally{
+    $('abtn').disabled=false
+    $('abtn').classList.remove('loading')
+    $('abtn').textContent='⚡ SCAN IMAGE'
+    hideOverlay()
+  }
+}
+
+function renderResult(d){
+  $('result-empty').style.display='none'
+  $('result-content').style.display='block'
+
+  const tl=d.threat_level??0
+  const colMap={CLEAR:'#39ff14',LOW:'#ffe500',MODERATE:'#ff9500',HIGH:'#ff3d3d',CRITICAL:'#ff003c'}
+  const col=colMap[d.status]||'var(--accent)'
+
+  $('tnum').textContent=tl
+  $('tnum').style.color=col
+  $('tstat').textContent=`${d.status_icon||''} ${d.status||''}`
+  $('tstat').style.color=col
+
+  // scene tag
+  $('scene-tag-wrap').innerHTML=d.scene_type?
+    `<div class="scene-tag" style="border-color:${col};color:${col}">${d.scene_type.toUpperCase().replace('_',' ')}</div>`
+    :''
+
+  // bars
+  for(let i=0;i<10;i++){
+    const b=$(`b${i}`)
+    b.style.background=i<tl?col:'var(--border)'
+    b.style.boxShadow=i<tl?`0 0 5px ${col}`:'none'
+  }
+
+  // data table
+  const rows=[
+    ['STATUS',     d.status,       tl>=7?'danger':tl>=4?'hi':'ok'],
+    ['SCENE',      d.scene_type?.replace('_',' ').toUpperCase()||'—', ''],
+    ['BEHAVIOR',   d.behavior||'—',''],
+    ['SUBJECTS',   d.subjects??'—',''],
+    ['REASON',     d.reason||'—', ''],
+    ['CONFIDENCE', d.confidence||'—',''],
+    ['ENGINES',    (d.engines_used||[]).join(', ')||'—',''],
+    ['SOURCE',     d.source||'—', ''],
+    ['PROC TIME',  (d.processing_time_s||'?')+'s',''],
+    ['RECORD ID',  d.id||'—',''],
+    ['TIMESTAMP',  d.timestamp||'—',''],
+  ]
+  $('dtable').innerHTML=rows.map(([k,v,c])=>
+    `<div class="drow"><span class="dk">${k}</span><span class="dv ${c}">${v??'—'}</span></div>`
+  ).join('')
+
+  $('rawj').textContent=JSON.stringify(d,null,2)
+}
+
+function toggleRaw(){const r=$('rawj');r.style.display=r.style.display==='none'?'block':'none'}
+
+let _si
+const msgs=['EMBEDDING IMAGE...','MATCHING DATASET...','COMPUTING THREAT...','CROSS-REFERENCING...']
+function showOverlay(){$('ov').classList.add('on');let i=0;_si=setInterval(()=>{$('smsg').textContent=msgs[i++%msgs.length]},900)}
+function hideOverlay(){$('ov').classList.remove('on');clearInterval(_si)}
+
+function toast(msg,type=''){
+  const t=$('toast')
+  t.textContent=msg
+  t.className='toast show '+(type==='err'?'err':'ok')
+  setTimeout(()=>t.classList.remove('show'),3000)
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Anomaly Detection Hub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f6f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .dashboard-card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); background: #ffffff; transition: 0.3s; }
+        .drop-zone { border: 2px dashed #9cb2cd; border-radius: 12px; padding: 40px; text-align: center; background: #fdfefe; cursor: pointer; transition: 0.2s; }
+        .drop-zone:hover { border-color: #0d6efd; background: #f0f6ff; }
+        .status-badge { padding: 6px 14px; border-radius: 30px; font-weight: 600; font-size: 0.85rem; }
+        .badge-danger { background-color: #ffe5e5; color: #dc3545; }
+        .badge-success { background-color: #e1f7ec; color: #198754; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <span class="navbar-brand mb-0 h1">🛡️ SPAi Supermarket Anomaly Core</span>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row g-4">
+        <!-- Input & Processing Controls Panel -->
+        <div class="col-lg-5">
+            <div class="card dashboard-card p-4 h-100">
+                <h4 class="mb-3 fw-bold">Upload Feed Asset</h4>
+                <p class="text-muted small">Submit single frames or long-form surveillance clips (`.mp4`, `.jpg`, `.png`) to extract security threat estimations.</p>
+                
+                <form id="uploadForm">
+                    <div class="drop-zone mb-3" id="dropZone">
+                        <span class="fs-2 text-secondary">📥</span>
+                        <p class="mt-2 mb-0 fw-medium">Drag & Drop files here or click to browse</p>
+                        <input type="file" id="fileInput" name="file" accept="image/*,video/*" style="display: none;">
+                    </div>
+                    <div id="fileSelectedName" class="text-primary small text-center mb-3 fw-semibold"></div>
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" id="submitBtn">Analyze Asset Stream</button>
+                </form>
+
+                <!-- Processing Display Panel -->
+                <div id="loadingState" class="text-center mt-4 d-none">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-muted small">Decompressing tensors & processing frame vectors...</p>
+                </div>
+
+                <div id="resultWidget" class="mt-4 p-3 bg-light rounded-3 d-none">
+                    <h6 class="text-uppercase tracking-wider text-secondary small fw-bold">Inference Calculation Result</h6>
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 id="resLabel" class="fw-bold mb-0">--</h3>
+                            <small text-muted>Highest Detected Event Confidence</small>
+                        </div>
+                        <span id="resBadge" class="status-badge">--</span>
+                    </div>
+                    <div class="progress mt-3" style="height: 10px;">
+                        <div id="resProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Display Tracking Logs -->
+        <div class="col-lg-7">
+            <div class="card dashboard-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold mb-0">Historical Audit Records</h4>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="loadHistory()">🔄 Refresh Logs</button>
+                </div>
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th>ID</th>
+                                <th>Timestamp</th>
+                                <th>Asset Typology</th>
+                                <th>Threat Metric</th>
+                                <th>Classification Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">No security logs recorded in current runtime session.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileSelectedName = document.getElementById('fileSelectedName');
+    const uploadForm = document.getElementById('uploadForm');
+    const loadingState = document.getElementById('loadingState');
+    const resultWidget = document.getElementById('resultWidget');
+
+    // UI Trigger Listeners
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
+        if(fileInput.files.length) fileSelectedName.textContent = `Selected: ${fileInput.files[0].name}`;
+    });
+
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = '#0d6efd'; });
+    dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = '#9cb2cd'; });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if(e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            fileSelectedName.textContent = `Selected: ${fileInput.files[0].name}`;
+        }
+    });
+
+    // Form Submission & API Query
+    uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if(!fileInput.files.length) return alert("Please specify an active target image or video stream first.");
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        loadingState.classList.remove('d-none');
+        resultWidget.classList.add('d-none');
+
+        try {
+            const response = await fetch('/api/predict', { method: 'POST', body: formData });
+            const data = await response.json();
+            
+            loadingState.classList.add('d-none');
+            resultWidget.classList.remove('d-none');
+
+            // Render Results Metrics
+            document.getElementById('resLabel').textContent = data.confidence;
+            const badge = document.getElementById('resBadge');
+            badge.textContent = data.result;
+            badge.className = `status-badge badge-${data.status_class}`;
+
+            const percentage = parseFloat(data.confidence);
+            const pBar = document.getElementById('resProgressBar');
+            pBar.style.width = `${percentage}%`;
+            pBar.className = `progress-bar progress-bar-striped progress-bar-animated bg-${data.status_class === 'danger' ? 'danger' : 'success'}`;
+
+            // Sync History records instantly
+            loadHistory();
+        } catch (err) {
+            alert("Inference processing connection dropped.");
+            loadingState.classList.add('d-none');
+        }
+    });
+
+    // Load Session Log Archives from Memory Database
+    async function loadHistory() {
+        try {
+            const res = await fetch('/api/history');
+            const data = await res.json();
+            const tbody = document.getElementById('historyTableBody');
+            
+            if(data.length === 0) return;
+            
+            tbody.innerHTML = data.map(row => `
+                <tr>
+                    <td><code>#${row.id}</code></td>
+                    <td class="small">${row.timestamp}</td>
+                    <td><span class="badge bg-secondary">${row.type}</span></td>
+                    <td class="fw-bold">${row.confidence}</td>
+                    <td><span class="status-badge badge-${row.status_class}">${row.result}</span></td>
+                </tr>
+            `).join('');
+        } catch (err) { console.error("History logging pipeline sync failed.", err); }
+    }
+
+    // Initialize history table layout on page render
+    window.onload = loadHistory;
+</script>
+</body>
+</html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SENTINEL — History</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080c0f;--panel:#0d1318;--border:#1a2530;--accent:#00e5ff;--red:#ff3d3d;--green:#39ff14;--yellow:#ffe500;--orange:#ff9500;--muted:#4a6070;--text:#c8d8e8;--mono:'Share Tech Mono',monospace;--display:'Barlow Condensed',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,229,255,.015) 2px,rgba(0,229,255,.015) 4px);pointer-events:none;z-index:9999}
+.hdr{border-bottom:1px solid var(--border);padding:.8rem 1.5rem;display:flex;align-items:center;justify-content:space-between;background:rgba(13,19,24,.95);position:sticky;top:0;z-index:100}
+.logo{font-family:var(--display);font-size:1.8rem;font-weight:900;letter-spacing:.15em;color:var(--accent)}
+.logo span{color:var(--red)}
+.nav-a{color:var(--muted);text-decoration:none;font-size:.65rem;letter-spacing:.1em;padding:3px 8px;border:1px solid var(--border);transition:all .2s}
+.nav-a:hover{color:var(--accent);border-color:var(--accent)}
+.main{max-width:1400px;margin:0 auto;padding:1.5rem}
+
+/* STATS */
+.stats{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.2rem}
+.stat{background:var(--panel);border:1px solid var(--border);padding:.8rem 1.2rem;flex:1;min-width:100px;position:relative}
+.stat::before{content:'';position:absolute;top:0;left:0;width:2px;height:100%;background:var(--accent)}
+.snum{font-family:var(--display);font-size:1.8rem;font-weight:900;color:var(--accent)}
+.slbl{font-size:.58rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:2px}
+
+/* FILTERS */
+.filters{background:var(--panel);border:1px solid var(--border);padding:1rem 1.2rem;margin-bottom:1.2rem;display:flex;gap:.8rem;flex-wrap:wrap;align-items:flex-end}
+.fg{display:flex;flex-direction:column;gap:3px}
+.fl{font-size:.58rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.fi{background:transparent;border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:.65rem;padding:5px 8px}
+.fi:focus{outline:none;border-color:var(--accent)}
+.fbtn{background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:var(--display);font-size:.75rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:6px 16px;cursor:pointer;transition:all .2s}
+.fbtn:hover{background:rgba(0,229,255,.08)}
+.fbtn.sec{border-color:var(--border);color:var(--muted)}
+.fbtn.sec:hover{color:var(--text);border-color:var(--text)}
+.quick{display:flex;gap:4px;flex-wrap:wrap}
+.qb{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:.58rem;padding:3px 7px;cursor:pointer;transition:all .2s}
+.qb:hover{border-color:var(--accent);color:var(--accent)}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.65rem}
+thead tr{border-bottom:1px solid var(--accent)}
+th{font-family:var(--display);font-size:.6rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);padding:7px 10px;text-align:left;white-space:nowrap}
+tbody tr{border-bottom:1px solid rgba(26,37,48,.8);cursor:pointer;transition:background .15s}
+tbody tr:hover{background:rgba(0,229,255,.04)}
+td{padding:8px 10px;color:var(--text);vertical-align:middle}
+.tl-num{font-family:var(--display);font-size:1.4rem;font-weight:900}
+.badge{display:inline-block;padding:1px 7px;font-size:.56rem;letter-spacing:.08em;border:1px solid;text-transform:uppercase}
+.bg{border-color:var(--green);color:var(--green)}
+.by{border-color:var(--yellow);color:var(--yellow)}
+.bo{border-color:var(--orange);color:var(--orange)}
+.br{border-color:var(--red);color:var(--red)}
+.bc{border-color:#ff003c;color:#ff003c}
+.bb{border-color:var(--accent);color:var(--accent)}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(8,12,15,.9);z-index:2000;align-items:center;justify-content:center}
+.modal-bg.on{display:flex}
+.modal{background:var(--panel);border:1px solid var(--border);width:min(680px,94vw);max-height:88vh;overflow-y:auto;padding:1.5rem;position:relative}
+.mc{position:absolute;top:.8rem;right:.8rem;background:transparent;border:none;color:var(--muted);font-family:var(--mono);font-size:.75rem;cursor:pointer}
+.mc:hover{color:var(--red)}
+.mtitle{font-family:var(--display);font-size:1.3rem;font-weight:900;letter-spacing:.1em;color:var(--accent);margin-bottom:1rem}
+.drow{display:flex;gap:6px;padding:6px 0;border-bottom:1px solid rgba(26,37,48,.8);font-size:.65rem}
+.dk{color:var(--muted);min-width:140px;flex-shrink:0;letter-spacing:.07em}
+.dv{color:var(--text);word-break:break-all}
+.raw{background:#050810;border:1px solid var(--border);padding:.8rem;font-size:.58rem;overflow:auto;max-height:240px;white-space:pre;color:#6a8a9a;margin-top:.8rem}
+.empty{text-align:center;padding:3rem;color:var(--muted);font-size:.72rem;letter-spacing:.1em}
+.loading{text-align:center;padding:2rem;color:var(--muted);animation:blink 1s step-end infinite}
+@keyframes blink{50%{opacity:.3}}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <div class="logo">SENTI<span>NEL</span></div>
+  <div style="display:flex;gap:.8rem;align-items:center">
+    <span style="font-size:.6rem;color:var(--muted)" id="cnt"></span>
+    <a href="/" class="nav-a">[ NEW SCAN ]</a>
+  </div>
+</header>
+
+<main class="main">
+  <div style="font-family:var(--display);font-size:.65rem;font-weight:700;letter-spacing:.2em;color:var(--accent);margin-bottom:1rem">▶ SCAN HISTORY LOG</div>
+
+  <div class="stats">
+    <div class="stat"><div class="snum" id="s-total">—</div><div class="slbl">Total scans</div></div>
+    <div class="stat"><div class="snum" id="s-alerts" style="color:var(--red)">—</div><div class="slbl">Alerts (≥6)</div></div>
+    <div class="stat"><div class="snum" id="s-avg" style="color:var(--orange)">—</div><div class="slbl">Avg threat</div></div>
+    <div class="stat"><div class="snum" id="s-today" style="color:var(--green)">—</div><div class="slbl">Today</div></div>
+    <div class="stat"><div class="snum" id="s-fight" style="color:var(--red)">—</div><div class="slbl">Fighting</div></div>
+    <div class="stat"><div class="snum" id="s-steal" style="color:var(--orange)">—</div><div class="slbl">Theft</div></div>
+  </div>
+
+  <div class="filters">
+    <div class="fg"><div class="fl">Start</div><input type="datetime-local" class="fi" id="f-start" style="min-width:160px"></div>
+    <div class="fg"><div class="fl">End</div><input type="datetime-local" class="fi" id="f-end" style="min-width:160px"></div>
+    <div class="fg">
+      <div class="fl">Scene type</div>
+      <select class="fi" id="f-scene">
+        <option value="">All scenes</option>
+        <option value="fighting">Fighting</option>
+        <option value="stealing">Stealing</option>
+        <option value="weapon_present">Weapon</option>
+        <option value="snooping">Snooping</option>
+        <option value="threatening">Threatening</option>
+        <option value="loitering">Loitering</option>
+        <option value="vandalism">Vandalism</option>
+        <option value="normal">Normal</option>
+      </select>
+    </div>
+    <div class="fg"><div class="fl">Min threat</div><input type="number" class="fi" id="f-min" min="0" max="10" placeholder="0" style="width:70px"></div>
+    <div class="fg"><div class="fl">Limit</div><input type="number" class="fi" id="f-limit" value="50" min="1" max="500" style="width:70px"></div>
+    <div class="fg">
+      <div class="fl">Quick</div>
+      <div class="quick">
+        <button class="qb" onclick="quick('last1')">Last 1</button>
+        <button class="qb" onclick="quick('last10')">Last 10</button>
+        <button class="qb" onclick="quick('today')">Today</button>
+        <button class="qb" onclick="quick('week')">Week</button>
+        <button class="qb" onclick="quick('alerts')">Alerts</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:flex-end">
+      <button class="fbtn" onclick="load()">SEARCH</button>
+      <button class="fbtn sec" onclick="reset()">RESET</button>
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <div id="state-msg" class="loading">LOADING...</div>
+    <table id="tbl" style="display:none">
+      <thead><tr>
+        <th>Time</th><th>ID</th><th>Threat</th><th>Status</th>
+        <th>Scene</th><th>Behavior</th><th>Subjects</th>
+        <th>Confidence</th><th>Engines</th><th>Proc</th><th>File</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</main>
+
+<!-- DETAIL MODAL -->
+<div class="modal-bg" id="modal" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="mc" onclick="document.getElementById('modal').classList.remove('on')">[ CLOSE ✕ ]</button>
+    <div class="mtitle">RECORD DETAIL</div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id)
+let records=[]
+
+function threatColor(tl){
+  if(tl>=9)return'#ff003c'
+  if(tl>=7)return'#ff3d3d'
+  if(tl>=5)return'#ff9500'
+  if(tl>=3)return'#ffe500'
+  return'#39ff14'
+}
+function statusBadge(s){
+  const m={CLEAR:'g',LOW:'y',MODERATE:'o',HIGH:'r',CRITICAL:'c'}
+  return`<span class="badge b${m[s]||'b'}">${s||'?'}</span>`
+}
+function sceneBadge(s){
+  if(!s||s==='normal')return`<span class="badge bb">${(s||'—').toUpperCase()}</span>`
+  return`<span class="badge br">${s.replace('_',' ').toUpperCase()}</span>`
+}
+
+async function load(){
+  $('state-msg').style.display='block'
+  $('state-msg').textContent='LOADING...'
+  $('tbl').style.display='none'
+
+  const scene=$('f-scene').value
+  const minT=$('f-min').value
+  const limit=$('f-limit').value||50
+  const start=$('f-start').value
+  const end=$('f-end').value
+
+  let url=`/api/history?limit=${limit}`
+  if(start)url+=`&start=${new Date(start).getTime()/1000}`
+  if(end)url+=`&end=${new Date(end).getTime()/1000}`
+  if(scene)url+=`&scene_type=${scene}`
+  if(minT)url+=`&min_threat=${minT}`
+
+  try{
+    const r=await fetch(url)
+    const d=await r.json()
+    records=d.records||[]
+    render(records)
+    stats(records)
+    $('cnt').textContent=`${records.length} RECORDS`
+  }catch(e){
+    $('state-msg').textContent='ERROR LOADING RECORDS'
+  }
+}
+
+function render(recs){
+  $('state-msg').style.display='none'
+  if(!recs.length){$('state-msg').style.display='block';$('state-msg').textContent='NO RECORDS FOUND';return}
+  $('tbl').style.display='table'
+  $('tbody').innerHTML=recs.map((r,i)=>{
+    const dt=new Date(r.timestamp).toLocaleString()
+    const col=threatColor(r.threat_level??0)
+    const engs=(r.engines_used||[]).map(e=>e.split(':')[0]).join('+')
+    return`<tr onclick="detail(${i})">
+      <td style="font-size:.6rem;white-space:nowrap">${dt}</td>
+      <td style="color:var(--muted);font-size:.6rem">${r.id}</td>
+      <td class="tl-num" style="color:${col}">${r.threat_level??'?'}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td>${sceneBadge(r.scene_type)}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.behavior||'—'}</td>
+      <td style="text-align:center">${r.subjects??'—'}</td>
+      <td><span class="badge bb">${r.confidence||'?'}</span></td>
+      <td style="font-size:.58rem;color:var(--muted)">${engs||'—'}</td>
+      <td style="font-size:.6rem;color:var(--muted)">${r.processing_time_s||'?'}s</td>
+      <td style="font-size:.58rem;color:var(--muted);max-width:100px;overflow:hidden;text-overflow:ellipsis">${r.original_filename||'—'}</td>
+    </tr>`
+  }).join('')
+}
+
+function stats(recs){
+  $('s-total').textContent=recs.length
+  $('s-alerts').textContent=recs.filter(r=>r.threat_level>=6).length
+  const avg=recs.length?(recs.reduce((s,r)=>s+(r.threat_level||0),0)/recs.length).toFixed(1):'—'
+  $('s-avg').textContent=avg
+  const today=new Date().toDateString()
+  $('s-today').textContent=recs.filter(r=>new Date(r.timestamp).toDateString()===today).length
+  $('s-fight').textContent=recs.filter(r=>r.scene_type==='fighting').length
+  $('s-steal').textContent=recs.filter(r=>r.scene_type==='stealing').length
+}
+
+function detail(i){
+  const r=records[i]
+  const col=threatColor(r.threat_level??0)
+  const rows=[
+    ['ID',r.id],['TIMESTAMP',r.timestamp],
+    ['THREAT',`<span style="color:${col};font-family:var(--display);font-size:1.4rem;font-weight:900">${r.threat_level}/10</span>`],
+    ['STATUS',statusBadge(r.status)],
+    ['SCENE',sceneBadge(r.scene_type)],
+    ['BEHAVIOR',r.behavior||'—'],
+    ['SUBJECTS',r.subjects??'—'],
+    ['REASON',r.reason||'—'],
+    ['CONFIDENCE',r.confidence||'—'],
+    ['ENGINES',(r.engines_used||[]).join(', ')||'—'],
+    ['SOURCE',r.source||'—'],
+    ['POSE CONTEXT',r.pose_context||'N/A'],
+    ['MODE',r.mode||'—'],
+    ['PROC TIME',(r.processing_time_s||'?')+'s'],
+    ['FILE',r.original_filename||'—'],
+  ]
+  $('modal-body').innerHTML=
+    rows.map(([k,v])=>`<div class="drow"><span class="dk">${k}</span><span class="dv">${v??'—'}</span></div>`).join('')+
+    `<div class="raw">${JSON.stringify(r,null,2)}</div>`
+  $('modal').classList.add('on')
+}
+
+function closeModal(e){if(e.target===$('modal'))$('modal').classList.remove('on')}
+
+function toISO(d){const p=n=>String(n).padStart(2,'0');return`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`}
+
+function quick(t){
+  const now=new Date()
+  $('f-start').value='';$('f-end').value=''
+  $('f-scene').value='';$('f-min').value=''
+  if(t==='last1'){$('f-limit').value=1}
+  else if(t==='last10'){$('f-limit').value=10}
+  else if(t==='today'){$('f-start').value=toISO(new Date(now.getFullYear(),now.getMonth(),now.getDate()));$('f-limit').value=500}
+  else if(t==='week'){$('f-start').value=toISO(new Date(now-7*86400000));$('f-limit').value=500}
+  else if(t==='alerts'){$('f-min').value=6;$('f-limit').value=500}
+  load()
+}
+
+function reset(){$('f-start').value='';$('f-end').value='';$('f-scene').value='';$('f-min').value='';$('f-limit').value=50;load()}
+
+load()
+</script>
+</body>
+</html>

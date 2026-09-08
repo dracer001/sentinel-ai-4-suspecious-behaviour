@@ -1,0 +1,14 @@
+# Local deployment — includes MediaPipe for on-device pose detection
+flask>=3.0.0
+flask-cors>=4.0.0
+gunicorn>=21.2.0
+werkzeug>=3.0.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+google-generativeai>=0.8.0
+groq>=0.9.0
+
+# Local AI engines
+mediapipe>=0.10.14
+numpy>=1.26.0
+opencv-python-headless>=4.9.0
